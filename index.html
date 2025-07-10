@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="google-site-verification" content="vcIP5l1cVGVRNyv6CP0NTlwDATB3QCu99DC16NP-VEg" />
+
+  <meta charset="UTF-8" />
+  <title>Instagram Downloader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      padding: 50px;
+    }
+
+    input {
+      width: 60%;
+      padding: 10px;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #3897f0;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    #result {
+      margin-top: 30px;
+    }
+
+    img, video {
+      max-width: 400px;
+      margin-top: 20px;
+      border-radius: 10px;
+    }
+
+    a {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+      color: #2c2c2c;
+    }
+  </style>
+</head>
+<body>
+  <h1>Instagram Post Downloader</h1>
+  <input type="text" id="link" placeholder="Paste Instagram Post URL" />
+  <br>
+  <button onclick="download()">Download</button>
+
+  <div id="result"></div>
+
+  <script>
+    async function download() {
+      const link = document.getElementById("link").value;
+      const result = document.getElementById("result");
+      result.innerHTML = "Fetching...";
+
+      try {
+        const res = await fetch("http://localhost:3000/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: link })
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          if (data.type === "image") {
+            result.innerHTML = `
+              <img src="${data.mediaUrl}" alt="Instagram Image" />
+              <a href="${data.mediaUrl}" download target="_blank">⬇️ Click to Download Image</a>
+            `;
+          } else if (data.type === "video") {
+            result.innerHTML = `
+              <video controls>
+                <source src="${data.mediaUrl}" type="video/mp4">
+                Your browser does not support the video tag.
+              </video>
+              <a href="${data.mediaUrl}" download target="_blank">⬇️ Click to Download Video</a>
+            `;
+          }
+        } else {
+          result.innerHTML = "❌ Error: " + data.error;
+        }
+      } catch (err) {
+        result.innerHTML = "❌ Fetch Error: " + err.message;
+      }
+    }
+  </script>
+</body>
+</html>
