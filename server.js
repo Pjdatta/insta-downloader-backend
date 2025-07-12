@@ -1,26 +1,43 @@
 const express = require('express');
+const fetch = require('node-fetch');
 const cors = require('cors');
-const axios = require('axios');
+const cheerio = require('cheerio');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Instagram Downloader Backend is Running!');
-});
-
-app.post('/api/fetch', async (req, res) => {
+app.post('/download', async (req, res) => {
   const { url } = req.body;
+
   try {
-    const response = await axios.get(url);
-    res.json({ data: response.data });
+    const response = await fetch(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0',
+      },
+    });
+    const html = await response.text();
+    const $ = cheerio.load(html);
+
+    const scriptTag = $('script[type="application/ld+json"]').html();
+    const jsonData = JSON.parse(scriptTag);
+
+    let mediaUrl = jsonData.contentUrl;
+    let type = jsonData['@type'] === 'VideoObject' ? 'video' : 'image';
+
+    if (mediaUrl) {
+      res.json({ success: true, mediaUrl, type });
+    } else {
+      res.json({ success: false, error: "Media not found" });
+    }
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch' });
+    console.error(error);
+    res.status(500).json({ success: false, error: "Server error" });
   }
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`✅ Server is running on port ${PORT}`);
+  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
