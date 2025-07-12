@@ -20,26 +20,28 @@ app.post('/download', async (req, res) => {
         'User-Agent': 'Mozilla/5.0',
       },
     });
+
     const html = await response.text();
     const $ = cheerio.load(html);
 
     const scriptTag = $('script[type="application/ld+json"]').html();
+    if (!scriptTag) {
+      return res.status(404).json({ success: false, error: "Media not found (ld+json missing)" });
+    }
+
     const jsonData = JSON.parse(scriptTag);
 
-    let mediaUrl = jsonData.contentUrl;
-    let type = jsonData['@type'] === 'VideoObject' ? 'video' : 'image';
+    const mediaUrl = jsonData.contentUrl;
+    const type = jsonData['@type'] === 'VideoObject' ? 'video' : 'image';
 
     if (mediaUrl) {
       res.json({ success: true, mediaUrl, type });
     } else {
       res.json({ success: false, error: "Media not found" });
     }
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: "Server error" });
   }
-});
-
-app.listen(PORT, () => {
-  console.log(`✅ Server running at http://localhost:${PORT}`);
 });
