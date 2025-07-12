@@ -62,7 +62,7 @@
       result.innerHTML = "Fetching...";
 
       try {
-        const res = await fetch("http://localhost:3000/download", {
+        const res = await fetch("https://insta-downloader-backend-nzyc.onrender.com/download", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: link })
